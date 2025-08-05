@@ -1,0 +1,693 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:simple/Alertbox/snackBarAlert.dart';
+import 'package:simple/Bloc/Report/report_bloc.dart';
+import 'package:simple/Bloc/demo/demo_bloc.dart';
+import 'package:simple/ModelClass/Report/Get_report_model.dart';
+import 'package:simple/Reusable/color.dart';
+import 'package:simple/Reusable/space.dart';
+import 'package:simple/Reusable/text_styles.dart';
+import 'package:simple/UI/Authentication/login_screen.dart';
+import 'package:simple/UI/Report/pop_view_report.dart';
+import 'package:simple/UI/StockIn/widget/productModel.dart';
+
+class StockView extends StatelessWidget {
+  final GlobalKey<StockViewViewState>? stockKey;
+  bool? hasRefreshedStock;
+  StockView({
+    super.key,
+    this.stockKey,
+    this.hasRefreshedStock,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StockViewView(
+        stockKey: stockKey, hasRefreshedStock: hasRefreshedStock);
+  }
+}
+
+class StockViewView extends StatefulWidget {
+  final GlobalKey<StockViewViewState>? stockKey;
+  bool? hasRefreshedStock;
+  StockViewView({
+    super.key,
+    this.stockKey,
+    this.hasRefreshedStock,
+  });
+
+  @override
+  StockViewViewState createState() => StockViewViewState();
+}
+
+class StockViewViewState extends State<StockViewView> {
+  String? errorMessage;
+  bool stockLoad = false;
+  DateTime selectedDate = DateTime.now();
+  String? selectedLocation;
+  String? selectedSupplier;
+  String? selectedTax;
+  String? selectedProduct;
+  final TextEditingController subtotalController =
+      TextEditingController(text: '0.00');
+  final TextEditingController taxController =
+      TextEditingController(text: '0.00');
+  final TextEditingController totalController =
+      TextEditingController(text: '0.00');
+  final TextEditingController finalController =
+      TextEditingController(text: '0.00');
+  final List<String> locations = ['Chennai', 'Bangalore', 'Mumbai', 'Delhi'];
+
+  final List<String> product = [
+    'Chicken Biriyani',
+    'Mutton Biriyani',
+    'Veg Salad',
+    'Egg Biriyani',
+    'Fish Biriyani',
+    'Chicken meals'
+  ];
+  List<ProductRowModel> selectedProducts = [];
+  bool _isProductAlreadyAdded(String name) {
+    return selectedProducts.any((p) => p.name == name);
+  }
+
+  final List<String> taxType = ['Inclusive', 'Exclusive'];
+  void refreshStock() {
+    if (!mounted || !context.mounted) return;
+
+    setState(() {
+      stockLoad = true;
+    });
+  }
+
+  void calculateTotals() {
+    double subtotal = 0.0;
+    double tax1Total = 0.0;
+    double tax2Total = 0.0;
+    double grandTotal = 0.0;
+
+    for (var product in selectedProducts) {
+      double lineSubtotal;
+
+      if (selectedTax == 'Inclusive') {
+        // Convert percentage to decimal (0.2% = 0.002, 0.3% = 0.003)
+        double tax1Decimal = product.tax1 / 100;
+        double tax2Decimal = product.tax2 / 100;
+        double totalTaxPercent = tax1Decimal + tax2Decimal;
+
+        double totalAmount = product.amount * product.qty;
+
+        // Calculate subtotal (amount without tax)
+        lineSubtotal = totalAmount / (1 + totalTaxPercent);
+
+        // Calculate individual tax amounts
+        product.tax1Amount = lineSubtotal * tax1Decimal;
+        product.tax2Amount = lineSubtotal * tax2Decimal;
+
+        // Total remains the same as entered amount
+        product.total = totalAmount;
+      } else {
+        // Exclusive means tax is added on top of amount
+        lineSubtotal = product.amount * product.qty;
+        double tax1Decimal = product.tax1 / 100;
+        double tax2Decimal = product.tax2 / 100;
+
+        product.tax1Amount = lineSubtotal * tax1Decimal;
+        product.tax2Amount = lineSubtotal * tax2Decimal;
+        product.total = lineSubtotal + product.tax1Amount + product.tax2Amount;
+      }
+
+      subtotal += lineSubtotal;
+      tax1Total += product.tax1Amount;
+      tax2Total += product.tax2Amount;
+      grandTotal += product.total;
+    }
+
+    // Set values to controllers
+    subtotalController.text = subtotal.toStringAsFixed(2);
+    taxController.text = (tax1Total + tax2Total).toStringAsFixed(2);
+    totalController.text = grandTotal.toStringAsFixed(2);
+    finalController.text = grandTotal.toStringAsFixed(2);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.hasRefreshedStock == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.stockKey?.currentState?.refreshStock();
+        setState(() {
+          stockLoad = true;
+        });
+      });
+    } else {
+      setState(() {
+        stockLoad = true;
+      });
+    }
+  }
+
+  Future<void> _pickDate() async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: appPrimaryColor,
+              onPrimary: whiteColor,
+              onSurface: blackColor,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor:
+                    appPrimaryColor, // OK & Cancel button text color
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget buildProductRow(int index, ProductRowModel productRow) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          children: [
+            // Name
+            Expanded(
+              flex: 2,
+              child: TextFormField(
+                initialValue: productRow.name,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  labelStyle: TextStyle(color: greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // Qty
+            Expanded(
+              child: TextFormField(
+                key: ValueKey('qty_$index'),
+                initialValue: productRow.qty.toString(),
+                onChanged: (val) {
+                  setState(() {
+                    productRow.qty = int.tryParse(val) ?? 1;
+                    calculateTotals();
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Qty',
+                  labelStyle: TextStyle(color: greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // Amount
+            Expanded(
+              child: TextFormField(
+                key: ValueKey('amount_$index'),
+                initialValue: productRow.amount.toStringAsFixed(2),
+                onChanged: (val) {
+                  setState(() {
+                    productRow.amount = double.tryParse(val) ?? 0.0;
+                    calculateTotals();
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Amount',
+                  labelStyle: TextStyle(color: greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // Tax1 %
+            Expanded(
+              child: TextFormField(
+                key: ValueKey('tax1_$index'),
+                initialValue: productRow.tax1.toStringAsFixed(2),
+                onChanged: (val) {
+                  setState(() {
+                    productRow.tax1 = double.tryParse(val) ?? 0.0;
+                    calculateTotals();
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Tax1%',
+                  labelStyle: TextStyle(color: greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // Tax2 %
+            Expanded(
+              child: TextFormField(
+                key: ValueKey('tax2_$index'),
+                initialValue: productRow.tax2.toStringAsFixed(2),
+                onChanged: (val) {
+                  setState(() {
+                    productRow.tax2 = double.tryParse(val) ?? 0.0;
+                    calculateTotals();
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Tax2%',
+                  labelStyle: TextStyle(color: greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // Tax1 Amount (read-only)
+            Expanded(
+              child: TextFormField(
+                key: ValueKey(
+                    'tax1Amount_${index}_${productRow.tax1Amount}'), // Fixed: removed underscore
+                initialValue: productRow.tax1Amount.toStringAsFixed(2),
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'Tax1 Amt',
+                  labelStyle: TextStyle(color: greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // Tax2 Amount (read-only) - FIXED: Correct key name
+            Expanded(
+              child: TextFormField(
+                key: ValueKey(
+                    'tax2Amount_${index}_${productRow.tax2Amount}'), // Fixed: removed underscore
+                initialValue: productRow.tax2Amount.toStringAsFixed(2),
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'Tax2 Amt',
+                  labelStyle: TextStyle(color: greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // Total (read-only) - FIXED: Correct key name
+            Expanded(
+              child: TextFormField(
+                key: ValueKey(
+                    'total_${index}_${productRow.total}'), // Fixed: removed underscore
+                initialValue: productRow.total.toStringAsFixed(2),
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'Total',
+                  labelStyle: TextStyle(color: greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8),
+
+            // Delete Button
+            IconButton(
+              icon: Icon(Icons.delete, color: Colors.red),
+              onPressed: () {
+                setState(() {
+                  selectedProducts.removeAt(index);
+                  calculateTotals();
+                });
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget mainContainer() {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Text("Stock In",
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              ),
+              verticalSpace(height: 10),
+              Row(
+                children: [
+                  // Date Picker
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _pickDate,
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                            labelText: 'Date',
+                            labelStyle: TextStyle(color: appPrimaryColor),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(color: greyColor),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: appPrimaryColor, width: 2),
+                            ),
+                            suffixIcon: Icon(Icons.calendar_today),
+                          ),
+                          controller: TextEditingController(
+                            text: DateFormat('dd/MM/yyyy').format(selectedDate),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: 'Location',
+                        labelStyle: TextStyle(
+                            color: selectedLocation != null
+                                ? appPrimaryColor
+                                : greyColor),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: greyColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: appPrimaryColor, width: 2),
+                        ),
+                      ),
+                      value: selectedLocation,
+                      items: locations
+                          .map((loc) => DropdownMenuItem(
+                                value: loc,
+                                child: Text(loc),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedLocation = value;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              verticalSpace(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: 'Supplier *',
+                        labelStyle: TextStyle(
+                            color: selectedSupplier != null
+                                ? appPrimaryColor
+                                : greyColor),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: greyColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: appPrimaryColor, width: 2),
+                        ),
+                      ),
+                      value: selectedSupplier,
+                      items: locations
+                          .map((sup) => DropdownMenuItem(
+                                value: sup,
+                                child: Text(sup),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedSupplier = value;
+                        });
+                      },
+                    ),
+                  ),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: 'Tax Type *',
+                        labelStyle: TextStyle(
+                            color: selectedTax != null
+                                ? appPrimaryColor
+                                : greyColor),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: greyColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: appPrimaryColor, width: 2),
+                        ),
+                      ),
+                      value: selectedTax,
+                      items: taxType
+                          .map((tax) => DropdownMenuItem(
+                                value: tax,
+                                child: Text(tax),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedTax = value;
+                          calculateTotals();
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              verticalSpace(height: 10),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Add Product *',
+                  labelStyle: TextStyle(
+                      color: selectedProduct != null
+                          ? appPrimaryColor
+                          : greyColor),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: greyColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                  ),
+                ),
+                value: selectedProduct,
+                items: product
+                    .map((pro) => DropdownMenuItem(
+                          value: pro,
+                          child: Text(pro),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedProduct = value;
+                    if (value != null && !_isProductAlreadyAdded(value)) {
+                      selectedProducts.add(ProductRowModel(name: value));
+                    }
+                    calculateTotals();
+                  });
+                },
+              ),
+              SizedBox(height: 16),
+
+              // Product rows
+              if (selectedProducts.isNotEmpty)
+                Column(
+                  children: selectedProducts
+                      .asMap()
+                      .entries
+                      .map((entry) => buildProductRow(entry.key, entry.value))
+                      .toList(),
+                ),
+              verticalSpace(height: 15),
+              Row(
+                children: [
+                  // Subtotal
+                  Expanded(
+                    child: TextFormField(
+                      controller: subtotalController,
+                      decoration: InputDecoration(
+                        labelText: 'Subtotal',
+                        labelStyle: TextStyle(color: appPrimaryColor),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: greyColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: appPrimaryColor, width: 2),
+                        ),
+                      ),
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Tax Amount
+                  Expanded(
+                    child: TextFormField(
+                      controller: taxController,
+                      decoration: InputDecoration(
+                        labelText: 'Tax Amount',
+                        labelStyle: TextStyle(color: appPrimaryColor),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: greyColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: appPrimaryColor, width: 2),
+                        ),
+                      ),
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Total Amount
+                  Expanded(
+                    child: TextFormField(
+                      controller: totalController,
+                      decoration: InputDecoration(
+                        labelText: 'Total Amount',
+                        labelStyle: TextStyle(color: appPrimaryColor),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: greyColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: appPrimaryColor, width: 2),
+                        ),
+                      ),
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Final Amount
+                  Expanded(
+                    child: TextFormField(
+                      controller: finalController,
+                      decoration: InputDecoration(
+                        labelText: 'Final Amount',
+                        labelStyle: TextStyle(color: appPrimaryColor),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: greyColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: appPrimaryColor, width: 2),
+                        ),
+                      ),
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return BlocBuilder<DemoBloc, dynamic>(
+      buildWhen: ((previous, current) {
+        return false;
+      }),
+      builder: (context, dynamic) {
+        return mainContainer();
+      },
+    );
+  }
+
+  void _handle401Error() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    await sharedPreferences.remove("token");
+    await sharedPreferences.clear();
+    showToast("Session expired. Please login again.", context, color: false);
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+      (Route<dynamic> route) => false,
+    );
+  }
+}
