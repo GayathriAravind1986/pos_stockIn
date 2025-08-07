@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ProductRowModel {
+  final String id;
   String name;
   int qty;
   double amount;
@@ -16,6 +17,7 @@ class ProductRowModel {
   late TextEditingController totalController;
 
   ProductRowModel({
+    required this.id,
     required this.name,
     this.qty = 1,
     this.amount = 0.0,

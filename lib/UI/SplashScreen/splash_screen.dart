@@ -18,6 +18,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   dynamic token;
+  dynamic role;
 
   @override
   void initState() {
@@ -54,13 +55,15 @@ class _SplashScreenState extends State<SplashScreen>
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       token = prefs.getString("token");
+      role = prefs.getString("role");
     });
     debugPrint("SplashToken: $token");
+    debugPrint("SplashRole: $role");
   }
 
   void onTimerFinished() {
     if (mounted) {
-      token == null
+      token == null && role == null
           ? Navigator.pushReplacement(
               context,
               MaterialPageRoute(

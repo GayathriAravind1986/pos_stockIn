@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,8 +13,10 @@ import 'package:simple/ModelClass/Order/Post_generate_order_model.dart';
 import 'package:simple/ModelClass/Order/Update_generate_order_model.dart';
 import 'package:simple/ModelClass/Order/get_order_list_today_model.dart';
 import 'package:simple/ModelClass/Report/Get_report_model.dart';
-import 'package:simple/ModelClass/ShopDetails/get_shop_details_model.dart';
-import 'package:simple/ModelClass/ShopDetails/get_shop_details_without_token_model.dart';
+import 'package:simple/ModelClass/ShopDetails/getStockMaintanencesModel.dart';
+import 'package:simple/ModelClass/StockIn/getLocationModel.dart';
+import 'package:simple/ModelClass/StockIn/getSupplierLocationModel.dart';
+import 'package:simple/ModelClass/StockIn/get_add_product_model.dart';
 import 'package:simple/Reusable/constant.dart';
 
 import '../ModelClass/Table/Get_table_model.dart';
@@ -61,6 +62,10 @@ class ApiProvider {
             "token",
             postLoginResponse.token.toString(),
           );
+          sharedPreferences.setString(
+            "role",
+            postLoginResponse.user!.role.toString(),
+          );
           return postLoginResponse;
         }
       }
@@ -83,7 +88,7 @@ class ApiProvider {
     try {
       var dio = Dio();
       var response = await dio.request(
-        '${Constants.baseUrl}api/categories?limit=100',
+        '${Constants.baseUrl}api/categories/name',
         options: Options(
           method: 'GET',
           headers: {
@@ -127,7 +132,7 @@ class ApiProvider {
     try {
       var dio = Dio();
       var response = await dio.request(
-        '${Constants.baseUrl}api/products/pos/category-products-all?categoryId=$catId&search=$searchKey',
+        '${Constants.baseUrl}api/products/pos/category-products?filter=false&categoryId=$catId&search=$searchKey',
         options: Options(
           method: 'GET',
           headers: {
@@ -202,8 +207,8 @@ class ApiProvider {
     }
   }
 
-  /// Shop Details - Fetch API Integration
-  Future<GetShopDetailsModel> getShopDetailsAPI() async {
+  /// Stock Details - Fetch API Integration
+  Future<GetStockMaintanencesModel> getStockDetailsAPI() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     var token = sharedPreferences.getString("token");
     try {
@@ -219,65 +224,27 @@ class ApiProvider {
       );
       if (response.statusCode == 200 && response.data != null) {
         if (response.data['success'] == true) {
-          GetShopDetailsModel getShopDetailsResponse =
-              GetShopDetailsModel.fromJson(response.data);
+          GetStockMaintanencesModel getShopDetailsResponse =
+              GetStockMaintanencesModel.fromJson(response.data);
           return getShopDetailsResponse;
         }
       } else {
-        return GetShopDetailsModel()
+        return GetStockMaintanencesModel()
           ..errorResponse = ErrorResponse(
             message: "Error: ${response.data['message'] ?? 'Unknown error'}",
             statusCode: response.statusCode,
           );
       }
-      return GetShopDetailsModel()
+      return GetStockMaintanencesModel()
         ..errorResponse = ErrorResponse(
           message: "Unexpected error occurred.",
           statusCode: 500,
         );
     } on DioException catch (dioError) {
       final errorResponse = handleError(dioError);
-      return GetShopDetailsModel()..errorResponse = errorResponse;
+      return GetStockMaintanencesModel()..errorResponse = errorResponse;
     } catch (error) {
-      return GetShopDetailsModel()..errorResponse = handleError(error);
-    }
-  }
-
-  /// shop details without token - API integration
-  Future<GetShopDetailsWithoutTokenModel>
-      getShopDetailsWithoutTokenAPI() async {
-    try {
-      var dio = Dio();
-      var response = await dio.request(
-        '${Constants.baseUrl}api/shops/getall',
-        options: Options(
-          method: 'GET',
-        ),
-      );
-      if (response.statusCode == 200 && response.data != null) {
-        if (response.data['success'] == true) {
-          GetShopDetailsWithoutTokenModel getShopDetailsWithoutTokenResponse =
-              GetShopDetailsWithoutTokenModel.fromJson(response.data);
-          return getShopDetailsWithoutTokenResponse;
-        }
-      } else {
-        return GetShopDetailsWithoutTokenModel()
-          ..errorResponse = ErrorResponse(
-            message: "Error: ${response.data['message'] ?? 'Unknown error'}",
-            statusCode: response.statusCode,
-          );
-      }
-      return GetShopDetailsWithoutTokenModel()
-        ..errorResponse = ErrorResponse(
-          message: "Unexpected error occurred.",
-          statusCode: 500,
-        );
-    } on DioException catch (dioError) {
-      final errorResponse = handleError(dioError);
-      return GetShopDetailsWithoutTokenModel()..errorResponse = errorResponse;
-    } catch (error) {
-      return GetShopDetailsWithoutTokenModel()
-        ..errorResponse = handleError(error);
+      return GetStockMaintanencesModel()..errorResponse = handleError(error);
     }
   }
 
@@ -587,6 +554,142 @@ class ApiProvider {
       return UpdateGenerateOrderModel()..errorResponse = errorResponse;
     } catch (error) {
       return UpdateGenerateOrderModel()..errorResponse = handleError(error);
+    }
+  }
+
+  /***** Stock_In*****/
+  /// Location - fetch API Integration
+  Future<GetLocationModel> getLocationAPI() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    var token = sharedPreferences.getString("token");
+    debugPrint("token:$token");
+
+    try {
+      var dio = Dio();
+      var response = await dio.request(
+        '${Constants.baseUrl}auth/users/bylocation',
+        options: Options(
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        if (response.data['success'] == true) {
+          GetLocationModel getLocationResponse =
+              GetLocationModel.fromJson(response.data);
+          return getLocationResponse;
+        }
+      } else {
+        return GetLocationModel()
+          ..errorResponse = ErrorResponse(
+            message: "Error: ${response.data['message'] ?? 'Unknown error'}",
+            statusCode: response.statusCode,
+          );
+      }
+      return GetLocationModel()
+        ..errorResponse = ErrorResponse(
+          message: "Unexpected error occurred.",
+          statusCode: 500,
+        );
+    } on DioException catch (dioError) {
+      final errorResponse = handleError(dioError);
+      return GetLocationModel()..errorResponse = errorResponse;
+    } catch (error) {
+      final errorResponse = handleError(error);
+      return GetLocationModel()..errorResponse = errorResponse;
+    }
+  }
+
+  /// Supplier - fetch API Integration
+  Future<GetSupplierLocationModel> getSupplierAPI(String? locationId) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    var token = sharedPreferences.getString("token");
+    debugPrint("token:$token");
+
+    try {
+      var dio = Dio();
+      var response = await dio.request(
+        '${Constants.baseUrl}api/supplier?isDefault=true&filter=false&locationId=$locationId',
+        options: Options(
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        if (response.data['success'] == true) {
+          GetSupplierLocationModel getSupplierResponse =
+              GetSupplierLocationModel.fromJson(response.data);
+          return getSupplierResponse;
+        }
+      } else {
+        return GetSupplierLocationModel()
+          ..errorResponse = ErrorResponse(
+            message: "Error: ${response.data['message'] ?? 'Unknown error'}",
+            statusCode: response.statusCode,
+          );
+      }
+      return GetSupplierLocationModel()
+        ..errorResponse = ErrorResponse(
+          message: "Unexpected error occurred.",
+          statusCode: 500,
+        );
+    } on DioException catch (dioError) {
+      final errorResponse = handleError(dioError);
+      return GetSupplierLocationModel()..errorResponse = errorResponse;
+    } catch (error) {
+      final errorResponse = handleError(error);
+      return GetSupplierLocationModel()..errorResponse = errorResponse;
+    }
+  }
+
+  /// Add Product - fetch API Integration
+  Future<GetAddProductModel> getAddProductAPI(String? locationId) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    var token = sharedPreferences.getString("token");
+    debugPrint("token:$token");
+
+    try {
+      var dio = Dio();
+      var response = await dio.request(
+        '${Constants.baseUrl}api/products?locationId=$locationId',
+        options: Options(
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        if (response.data['success'] == true) {
+          GetAddProductModel getAddProductResponse =
+              GetAddProductModel.fromJson(response.data);
+          return getAddProductResponse;
+        }
+      } else {
+        return GetAddProductModel()
+          ..errorResponse = ErrorResponse(
+            message: "Error: ${response.data['message'] ?? 'Unknown error'}",
+            statusCode: response.statusCode,
+          );
+      }
+      return GetAddProductModel()
+        ..errorResponse = ErrorResponse(
+          message: "Unexpected error occurred.",
+          statusCode: 500,
+        );
+    } on DioException catch (dioError) {
+      final errorResponse = handleError(dioError);
+      return GetAddProductModel()..errorResponse = errorResponse;
+    } catch (error) {
+      final errorResponse = handleError(error);
+      return GetAddProductModel()..errorResponse = errorResponse;
     }
   }
 

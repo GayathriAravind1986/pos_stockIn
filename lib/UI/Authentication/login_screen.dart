@@ -203,13 +203,16 @@ class LoginScreenViewState extends State<LoginScreenView> {
                   loginLoad = false;
                 });
                 showToast('${postLoginModel.message}', context, color: true);
-
-                Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                        builder: (context) => const DashBoardScreen(
-                              selectTab: 0,
-                            )),
-                    (Route<dynamic> route) => false);
+                if (postLoginModel.user!.role == "OPERATOR") {
+                  Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                          builder: (context) => const DashBoardScreen(
+                                selectTab: 0,
+                              )),
+                      (Route<dynamic> route) => false);
+                } else {
+                  showToast("Please Login Admin in Web", context, color: false);
+                }
               } else {
                 final errorMsg =
                     postLoginModel.errorResponse?.errors?.first.message ??

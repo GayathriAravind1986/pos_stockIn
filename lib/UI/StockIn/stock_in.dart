@@ -1,19 +1,19 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple/Alertbox/snackBarAlert.dart';
-import 'package:simple/Bloc/Report/report_bloc.dart';
-import 'package:simple/Bloc/demo/demo_bloc.dart';
-import 'package:simple/ModelClass/Report/Get_report_model.dart';
+import 'package:simple/Bloc/StockIn/stock_in_bloc.dart';
+import 'package:simple/ModelClass/StockIn/getLocationModel.dart';
+import 'package:simple/ModelClass/StockIn/getSupplierLocationModel.dart';
+import 'package:simple/ModelClass/StockIn/get_add_product_model.dart'
+    as productModel;
 import 'package:simple/Reusable/color.dart';
 import 'package:simple/Reusable/space.dart';
-import 'package:simple/Reusable/text_styles.dart';
 import 'package:simple/UI/Authentication/login_screen.dart';
-import 'package:simple/UI/Report/pop_view_report.dart';
 import 'package:simple/UI/StockIn/widget/productModel.dart';
 
 class StockView extends StatelessWidget {
@@ -46,6 +46,11 @@ class StockViewView extends StatefulWidget {
 }
 
 class StockViewViewState extends State<StockViewView> {
+  GetLocationModel getLocationModel = GetLocationModel();
+  GetSupplierLocationModel getSupplierLocationModel =
+      GetSupplierLocationModel();
+  productModel.GetAddProductModel getAddProductModel =
+      productModel.GetAddProductModel();
   String? errorMessage;
   bool stockLoad = false;
   DateTime selectedDate = DateTime.now();
@@ -53,6 +58,8 @@ class StockViewViewState extends State<StockViewView> {
   String? selectedSupplier;
   String? selectedTax;
   String? selectedProduct;
+  String? locationId;
+
   final TextEditingController subtotalController =
       TextEditingController(text: '0.00');
   final TextEditingController taxController =
@@ -72,14 +79,14 @@ class StockViewViewState extends State<StockViewView> {
     'Chicken meals'
   ];
   List<ProductRowModel> selectedProducts = [];
-  bool _isProductAlreadyAdded(String name) {
-    return selectedProducts.any((p) => p.name == name);
+  bool _isProductAlreadyAdded(String productId) {
+    return selectedProducts.any((product) => product.id == productId);
   }
 
   final List<String> taxType = ['Inclusive', 'Exclusive'];
   void refreshStock() {
     if (!mounted || !context.mounted) return;
-
+    context.read<StockInBloc>().add(StockInLocation());
     setState(() {
       stockLoad = true;
     });
@@ -138,7 +145,6 @@ class StockViewViewState extends State<StockViewView> {
   @override
   void initState() {
     super.initState();
-
     if (widget.hasRefreshedStock == true) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         widget.stockKey?.currentState?.refreshStock();
@@ -147,6 +153,7 @@ class StockViewViewState extends State<StockViewView> {
         });
       });
     } else {
+      context.read<StockInBloc>().add(StockInLocation());
       setState(() {
         stockLoad = true;
       });
@@ -342,8 +349,7 @@ class StockViewViewState extends State<StockViewView> {
             // Tax2 Amount (read-only) - FIXED: Correct key name
             Expanded(
               child: TextFormField(
-                key: ValueKey(
-                    'tax2Amount_${index}_${productRow.tax2Amount}'), // Fixed: removed underscore
+                key: ValueKey('tax2Amount_${index}_${productRow.tax2Amount}'),
                 initialValue: productRow.tax2Amount.toStringAsFixed(2),
                 readOnly: true,
                 decoration: InputDecoration(
@@ -387,6 +393,7 @@ class StockViewViewState extends State<StockViewView> {
               onPressed: () {
                 setState(() {
                   selectedProducts.removeAt(index);
+                  selectedProduct = null;
                   calculateTotals();
                 });
               },
@@ -437,36 +444,24 @@ class StockViewViewState extends State<StockViewView> {
                     ),
                   ),
                   SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: InputDecoration(
-                        labelText: 'Location',
-                        labelStyle: TextStyle(
-                            color: selectedLocation != null
-                                ? appPrimaryColor
-                                : greyColor),
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: greyColor),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: appPrimaryColor, width: 2),
-                        ),
-                      ),
-                      value: selectedLocation,
-                      items: locations
-                          .map((loc) => DropdownMenuItem(
-                                value: loc,
-                                child: Text(loc),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedLocation = value;
-                        });
-                      },
-                    ),
-                  ),
+                  getLocationModel.data?.locationName != null
+                      ? Expanded(
+                          child: TextFormField(
+                            enabled: false,
+                            initialValue: getLocationModel.data!.locationName!,
+                            decoration: InputDecoration(
+                              labelText: 'Location',
+                              labelStyle: TextStyle(color: appPrimaryColor),
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: greyColor),
+                              ),
+                              disabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: greyColor),
+                              ),
+                            ),
+                          ),
+                        )
+                      : SizedBox.shrink(), // or show a loading indicator
                 ],
               ),
               verticalSpace(height: 10),
@@ -489,15 +484,17 @@ class StockViewViewState extends State<StockViewView> {
                         ),
                       ),
                       value: selectedSupplier,
-                      items: locations
-                          .map((sup) => DropdownMenuItem(
-                                value: sup,
-                                child: Text(sup),
-                              ))
+                      items: (getSupplierLocationModel.data ?? [])
+                          .map<DropdownMenuItem<String>>(
+                              (sup) => DropdownMenuItem<String>(
+                                    value: sup.id,
+                                    child: Text(sup.name ?? 'No Name'),
+                                  ))
                           .toList(),
                       onChanged: (value) {
                         setState(() {
                           selectedSupplier = value;
+                          debugPrint("suppliername:$selectedSupplier");
                         });
                       },
                     ),
@@ -529,6 +526,7 @@ class StockViewViewState extends State<StockViewView> {
                       onChanged: (value) {
                         setState(() {
                           selectedTax = value;
+                          debugPrint("selectedTax:$selectedTax");
                           calculateTotals();
                         });
                       },
@@ -538,39 +536,65 @@ class StockViewViewState extends State<StockViewView> {
               ),
               verticalSpace(height: 10),
               DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Add Product *',
-                  labelStyle: TextStyle(
-                      color: selectedProduct != null
-                          ? appPrimaryColor
-                          : greyColor),
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: greyColor),
+                  decoration: InputDecoration(
+                    labelText: 'Add Product *',
+                    labelStyle: TextStyle(
+                      color:
+                          selectedProduct != null ? appPrimaryColor : greyColor,
+                    ),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: greyColor),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                    ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: appPrimaryColor, width: 2),
-                  ),
-                ),
-                value: selectedProduct,
-                items: product
-                    .map((pro) => DropdownMenuItem(
-                          value: pro,
-                          child: Text(pro),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedProduct = value;
-                    if (value != null && !_isProductAlreadyAdded(value)) {
-                      selectedProducts.add(ProductRowModel(name: value));
-                    }
-                    calculateTotals();
-                  });
-                },
-              ),
-              SizedBox(height: 16),
+                  value: selectedProduct,
+                  items: (getAddProductModel.data ?? [])
+                      .map<DropdownMenuItem<String>>(
+                        (pro) => DropdownMenuItem<String>(
+                          value: pro.id,
+                          child: Text(pro.name ?? 'No Name'),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      productModel.Data? selectedProductObj;
+                      try {
+                        selectedProductObj = getAddProductModel.data
+                            ?.firstWhere((product) => product.id == value);
+                      } on StateError {
+                        selectedProduct = null;
+                        selectedProductObj = null;
+                      }
+                      final dropdownItems = (getAddProductModel.data ?? [])
+                          .where((pro) => !selectedProducts
+                              .any((selected) => selected.id == pro.id))
+                          .toList();
 
-              // Product rows
+                      if (selectedProduct != null &&
+                          dropdownItems
+                              .every((item) => item.id != selectedProduct)) {
+                        selectedProduct = null;
+                        selectedProductObj = null;
+                      }
+                      if (value != null &&
+                          selectedProductObj != null &&
+                          !_isProductAlreadyAdded(value)) {
+                        selectedProducts.add(ProductRowModel(
+                          id: selectedProductObj.id ?? '',
+                          name: selectedProductObj.name ?? 'No Name',
+                        ));
+                        selectedProduct = null;
+                        selectedProductObj = null;
+                      } else {
+                        selectedProduct = value;
+                      }
+                      calculateTotals();
+                    });
+                  }),
+              SizedBox(height: 16),
               if (selectedProducts.isNotEmpty)
                 Column(
                   children: selectedProducts
@@ -669,8 +693,71 @@ class StockViewViewState extends State<StockViewView> {
       );
     }
 
-    return BlocBuilder<DemoBloc, dynamic>(
+    return BlocBuilder<StockInBloc, dynamic>(
       buildWhen: ((previous, current) {
+        if (current is GetLocationModel) {
+          getLocationModel = current;
+          if (getLocationModel.errorResponse?.isUnauthorized == true) {
+            _handle401Error();
+            return true;
+          }
+          if (getLocationModel.success == true) {
+            locationId = getLocationModel.data?.locationId;
+            debugPrint("locationId:$locationId");
+            context
+                .read<StockInBloc>()
+                .add(StockInSupplier(locationId.toString()));
+            context
+                .read<StockInBloc>()
+                .add(StockInAddProduct(locationId.toString()));
+            setState(() {
+              stockLoad = false;
+            });
+          } else {
+            debugPrint("${getLocationModel.data?.locationName}");
+            setState(() {
+              stockLoad = false;
+            });
+            showToast("No Location found", context, color: false);
+          }
+          return true;
+        }
+        if (current is GetSupplierLocationModel) {
+          getSupplierLocationModel = current;
+          if (getSupplierLocationModel.errorResponse?.isUnauthorized == true) {
+            _handle401Error();
+            return true;
+          }
+          if (getSupplierLocationModel.success == true) {
+            setState(() {
+              stockLoad = false;
+            });
+          } else {
+            setState(() {
+              stockLoad = false;
+            });
+            showToast("No Supplier for this location", context, color: false);
+          }
+          return true;
+        }
+        if (current is productModel.GetAddProductModel) {
+          getAddProductModel = current;
+          if (getAddProductModel.errorResponse?.isUnauthorized == true) {
+            _handle401Error();
+            return true;
+          }
+          if (getAddProductModel.success == true) {
+            setState(() {
+              stockLoad = false;
+            });
+          } else {
+            setState(() {
+              stockLoad = false;
+            });
+            showToast("No Product for this location", context, color: false);
+          }
+          return true;
+        }
         return false;
       }),
       builder: (context, dynamic) {

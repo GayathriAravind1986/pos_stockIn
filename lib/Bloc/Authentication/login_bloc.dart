@@ -9,19 +9,10 @@ class LoginIn extends LoginInEvent {
   LoginIn(this.email, this.password);
 }
 
-class ShopDetails extends LoginInEvent {}
-
 class LoginInBloc extends Bloc<LoginInEvent, dynamic> {
   LoginInBloc() : super(dynamic) {
     on<LoginIn>((event, emit) async {
       await ApiProvider().loginAPI(event.email, event.password).then((value) {
-        emit(value);
-      }).catchError((error) {
-        emit(error);
-      });
-    });
-    on<ShopDetails>((event, emit) async {
-      await ApiProvider().getShopDetailsWithoutTokenAPI().then((value) {
         emit(value);
       }).catchError((error) {
         emit(error);

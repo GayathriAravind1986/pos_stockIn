@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:simple/Alertbox/AlertDialogBox.dart';
 import 'package:simple/Bloc/Category/category_bloc.dart';
 import 'package:simple/Bloc/Report/report_bloc.dart';
+import 'package:simple/Bloc/StockIn/stock_in_bloc.dart';
 import 'package:simple/Bloc/demo/demo_bloc.dart';
 import 'package:simple/ModelClass/Order/Get_view_order_model.dart';
 import 'package:simple/UI/CustomAppBar/custom_appbar.dart';
@@ -10,7 +11,6 @@ import 'package:simple/UI/Home_screen/home_screen.dart';
 import 'package:simple/UI/Order/order_list.dart';
 import 'package:simple/UI/Order/order_tab_page.dart';
 import 'package:simple/UI/StockIn/stock_in.dart';
-
 import '../Report/report_order.dart';
 
 class DashBoardScreen extends StatelessWidget {
@@ -193,13 +193,13 @@ class _DashBoardState extends State<DashBoard> {
                   ),
             hasRefreshedStock == true
                 ? BlocProvider(
-                    create: (_) => DemoBloc(),
+                    create: (_) => StockInBloc(),
                     child: StockViewView(
                       key: stockKey,
                       hasRefreshedStock: hasRefreshedStock,
                     ))
                 : BlocProvider(
-                    create: (_) => DemoBloc(),
+                    create: (_) => StockInBloc(),
                     child: StockView(
                       key: stockKey,
                       hasRefreshedStock: hasRefreshedStock,

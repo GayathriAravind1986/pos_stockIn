@@ -1,4 +1,3 @@
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -127,22 +126,22 @@ class ReportViewViewState extends State<ReportViewView> {
 
     if (widget.hasRefreshedReport == true) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.reportKey?.currentState?.refreshReport();
         setState(() {
           reportLoad = true;
-          fromDateController.clear;
-          toDateController.clear;
+          fromDateController.text = yesterdayDate.toString();
+          toDateController.text = todayDate.toString();
         });
+        widget.reportKey?.currentState?.refreshReport();
       });
     } else {
+      setState(() {
+        reportLoad = true;
+        fromDateController.text = yesterdayDate.toString();
+        toDateController.text = todayDate.toString();
+      });
       context.read<ReportTodayBloc>().add(
             ReportTodayList(yesterdayDate, todayDate),
           );
-      setState(() {
-        reportLoad = true;
-        fromDateController.clear;
-        toDateController.clear;
-      });
     }
   }
 

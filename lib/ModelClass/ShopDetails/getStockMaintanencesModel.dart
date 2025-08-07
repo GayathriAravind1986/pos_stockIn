@@ -1,10 +1,10 @@
 import 'package:simple/Bloc/Response/errorResponse.dart';
 
 /// success : true
-/// data : {"location":{"address":"11 Big street","city":"Madrasa","state":"Tamil Nadu","zipCode":"600001","country":"India"},"_id":"6856f95deb6dfad25c44a4dc","name":"Roja Restaurant","contactNumber":"+91-9876543210","email":"shop@example.com","gstNumber":"29ABCDE1234F2Z5","currencySymbol":"₹","createdAt":"2025-06-21T18:26:37.059Z","__v":0,"printType":"imin","image":"https://res.cloudinary.com/dm6wrm7vf/image/upload/v1753242759/shop/kkjy42ffngbjjmgtdjbi.jpg"}
+/// data : {"location":{"address":"Tenkasi main road","city":"Alangualam","state":"Tamil Nadu","zipCode":"627851","country":"India"},"_id":"68902eb61432ba566a420059","name":"Alagu Drive In","contactNumber":"+91 0000000000","email":"admin@gmail.com","gstNumber":"00000000000","currencySymbol":"₹","printType":"imin","tipEnabled":false,"createdAt":"2025-08-04T03:53:26.419Z","__v":0,"stockMaintenance":true}
 
-class GetShopDetailsModel {
-  GetShopDetailsModel({
+class GetStockMaintanencesModel {
+  GetStockMaintanencesModel({
     bool? success,
     Data? data,
     ErrorResponse? errorResponse,
@@ -13,7 +13,7 @@ class GetShopDetailsModel {
     _data = data;
   }
 
-  GetShopDetailsModel.fromJson(dynamic json) {
+  GetStockMaintanencesModel.fromJson(dynamic json) {
     _success = json['success'];
     _data = json['data'] != null ? Data.fromJson(json['data']) : null;
     if (json['errors'] != null && json['errors'] is Map<String, dynamic>) {
@@ -25,11 +25,11 @@ class GetShopDetailsModel {
   bool? _success;
   Data? _data;
   ErrorResponse? errorResponse;
-  GetShopDetailsModel copyWith({
+  GetStockMaintanencesModel copyWith({
     bool? success,
     Data? data,
   }) =>
-      GetShopDetailsModel(
+      GetStockMaintanencesModel(
         success: success ?? _success,
         data: data ?? _data,
       );
@@ -49,17 +49,18 @@ class GetShopDetailsModel {
   }
 }
 
-/// location : {"address":"11 Big street","city":"Madrasa","state":"Tamil Nadu","zipCode":"600001","country":"India"}
-/// _id : "6856f95deb6dfad25c44a4dc"
-/// name : "Roja Restaurant"
-/// contactNumber : "+91-9876543210"
-/// email : "shop@example.com"
-/// gstNumber : "29ABCDE1234F2Z5"
+/// location : {"address":"Tenkasi main road","city":"Alangualam","state":"Tamil Nadu","zipCode":"627851","country":"India"}
+/// _id : "68902eb61432ba566a420059"
+/// name : "Alagu Drive In"
+/// contactNumber : "+91 0000000000"
+/// email : "admin@gmail.com"
+/// gstNumber : "00000000000"
 /// currencySymbol : "₹"
-/// createdAt : "2025-06-21T18:26:37.059Z"
-/// __v : 0
 /// printType : "imin"
-/// image : "https://res.cloudinary.com/dm6wrm7vf/image/upload/v1753242759/shop/kkjy42ffngbjjmgtdjbi.jpg"
+/// tipEnabled : false
+/// createdAt : "2025-08-04T03:53:26.419Z"
+/// __v : 0
+/// stockMaintenance : true
 
 class Data {
   Data({
@@ -70,10 +71,11 @@ class Data {
     String? email,
     String? gstNumber,
     String? currencySymbol,
+    String? printType,
+    bool? tipEnabled,
     String? createdAt,
     num? v,
-    String? printType,
-    String? image,
+    bool? stockMaintenance,
   }) {
     _location = location;
     _id = id;
@@ -82,10 +84,11 @@ class Data {
     _email = email;
     _gstNumber = gstNumber;
     _currencySymbol = currencySymbol;
+    _printType = printType;
+    _tipEnabled = tipEnabled;
     _createdAt = createdAt;
     _v = v;
-    _printType = printType;
-    _image = image;
+    _stockMaintenance = stockMaintenance;
   }
 
   Data.fromJson(dynamic json) {
@@ -97,10 +100,11 @@ class Data {
     _email = json['email'];
     _gstNumber = json['gstNumber'];
     _currencySymbol = json['currencySymbol'];
+    _printType = json['printType'];
+    _tipEnabled = json['tipEnabled'];
     _createdAt = json['createdAt'];
     _v = json['__v'];
-    _printType = json['printType'];
-    _image = json['image'];
+    _stockMaintenance = json['stockMaintenance'];
   }
   Location? _location;
   String? _id;
@@ -109,10 +113,11 @@ class Data {
   String? _email;
   String? _gstNumber;
   String? _currencySymbol;
+  String? _printType;
+  bool? _tipEnabled;
   String? _createdAt;
   num? _v;
-  String? _printType;
-  String? _image;
+  bool? _stockMaintenance;
   Data copyWith({
     Location? location,
     String? id,
@@ -121,10 +126,11 @@ class Data {
     String? email,
     String? gstNumber,
     String? currencySymbol,
+    String? printType,
+    bool? tipEnabled,
     String? createdAt,
     num? v,
-    String? printType,
-    String? image,
+    bool? stockMaintenance,
   }) =>
       Data(
         location: location ?? _location,
@@ -134,10 +140,11 @@ class Data {
         email: email ?? _email,
         gstNumber: gstNumber ?? _gstNumber,
         currencySymbol: currencySymbol ?? _currencySymbol,
+        printType: printType ?? _printType,
+        tipEnabled: tipEnabled ?? _tipEnabled,
         createdAt: createdAt ?? _createdAt,
         v: v ?? _v,
-        printType: printType ?? _printType,
-        image: image ?? _image,
+        stockMaintenance: stockMaintenance ?? _stockMaintenance,
       );
   Location? get location => _location;
   String? get id => _id;
@@ -146,10 +153,11 @@ class Data {
   String? get email => _email;
   String? get gstNumber => _gstNumber;
   String? get currencySymbol => _currencySymbol;
+  String? get printType => _printType;
+  bool? get tipEnabled => _tipEnabled;
   String? get createdAt => _createdAt;
   num? get v => _v;
-  String? get printType => _printType;
-  String? get image => _image;
+  bool? get stockMaintenance => _stockMaintenance;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -162,18 +170,19 @@ class Data {
     map['email'] = _email;
     map['gstNumber'] = _gstNumber;
     map['currencySymbol'] = _currencySymbol;
+    map['printType'] = _printType;
+    map['tipEnabled'] = _tipEnabled;
     map['createdAt'] = _createdAt;
     map['__v'] = _v;
-    map['printType'] = _printType;
-    map['image'] = _image;
+    map['stockMaintenance'] = _stockMaintenance;
     return map;
   }
 }
 
-/// address : "11 Big street"
-/// city : "Madrasa"
+/// address : "Tenkasi main road"
+/// city : "Alangualam"
 /// state : "Tamil Nadu"
-/// zipCode : "600001"
+/// zipCode : "627851"
 /// country : "India"
 
 class Location {

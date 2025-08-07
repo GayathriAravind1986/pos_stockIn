@@ -150,11 +150,15 @@ class Items {
     String? id,
     String? name,
     num? qty,
+    num? availableQuantity,
     String? image,
     num? basePrice,
     num? addonTotal,
     List<SelectedAddons>? selectedAddons,
     num? subtotal,
+    num? discountAmount,
+    dynamic appliedDiscount,
+    num? availableDiscounts,
     num? totalTax,
     num? total,
     List<AppliedTaxes>? appliedTaxes,
@@ -162,11 +166,15 @@ class Items {
     _id = id;
     _name = name;
     _qty = qty;
+    _availableQuantity = availableQuantity;
     _image = image;
     _basePrice = basePrice;
     _addonTotal = addonTotal;
     _selectedAddons = selectedAddons;
     _subtotal = subtotal;
+    _discountAmount = discountAmount;
+    _appliedDiscount = appliedDiscount;
+    _availableDiscounts = availableDiscounts;
     _totalTax = totalTax;
     _total = total;
     _appliedTaxes = appliedTaxes;
@@ -176,6 +184,7 @@ class Items {
     _id = json['_id'];
     _name = json['name'];
     _qty = json['qty'];
+    _availableQuantity = json['availableQuantity'];
     _image = json['image'];
     _basePrice = json['basePrice'];
     _addonTotal = json['addonTotal'];
@@ -186,6 +195,9 @@ class Items {
       });
     }
     _subtotal = json['subtotal'];
+    _discountAmount = json['discountAmount'];
+    _appliedDiscount = json['appliedDiscount'];
+    _availableDiscounts = json['availableDiscounts'];
     _totalTax = json['totalTax'];
     _total = json['total'];
     if (json['appliedTaxes'] != null) {
@@ -198,11 +210,15 @@ class Items {
   String? _id;
   String? _name;
   num? _qty;
+  num? _availableQuantity;
   String? _image;
   num? _basePrice;
   num? _addonTotal;
   List<SelectedAddons>? _selectedAddons;
   num? _subtotal;
+  num? _discountAmount;
+  dynamic _appliedDiscount;
+  num? _availableDiscounts;
   num? _totalTax;
   num? _total;
   List<AppliedTaxes>? _appliedTaxes;
@@ -210,11 +226,15 @@ class Items {
     String? id,
     String? name,
     num? qty,
+    num? availableQuantity,
     String? image,
     num? basePrice,
     num? addonTotal,
     List<SelectedAddons>? selectedAddons,
     num? subtotal,
+    num? discountAmount,
+    dynamic appliedDiscount,
+    num? availableDiscounts,
     num? totalTax,
     num? total,
     List<AppliedTaxes>? appliedTaxes,
@@ -223,11 +243,15 @@ class Items {
         id: id ?? _id,
         name: name ?? _name,
         qty: qty ?? _qty,
+        availableQuantity: availableQuantity ?? _availableQuantity,
         image: image ?? _image,
         basePrice: basePrice ?? _basePrice,
         addonTotal: addonTotal ?? _addonTotal,
         selectedAddons: selectedAddons ?? _selectedAddons,
         subtotal: subtotal ?? _subtotal,
+        discountAmount: discountAmount ?? _discountAmount,
+        appliedDiscount: appliedDiscount ?? _appliedDiscount,
+        availableDiscounts: availableDiscounts ?? _availableDiscounts,
         totalTax: totalTax ?? _totalTax,
         total: total ?? _total,
         appliedTaxes: appliedTaxes ?? _appliedTaxes,
@@ -235,11 +259,15 @@ class Items {
   String? get id => _id;
   String? get name => _name;
   num? get qty => _qty;
+  num? get availableQuantity => _availableQuantity;
   String? get image => _image;
   num? get basePrice => _basePrice;
   num? get addonTotal => _addonTotal;
   List<SelectedAddons>? get selectedAddons => _selectedAddons;
   num? get subtotal => _subtotal;
+  num? get discountAmount => _discountAmount;
+  dynamic get appliedDiscount => _appliedDiscount;
+  num? get availableDiscounts => _availableDiscounts;
   num? get totalTax => _totalTax;
   num? get total => _total;
   List<AppliedTaxes>? get appliedTaxes => _appliedTaxes;
@@ -249,6 +277,7 @@ class Items {
     map['_id'] = _id;
     map['name'] = _name;
     map['qty'] = _qty;
+    map['availableQuantity'] = _availableQuantity;
     map['image'] = _image;
     map['basePrice'] = _basePrice;
     map['addonTotal'] = _addonTotal;
@@ -256,6 +285,9 @@ class Items {
       map['selectedAddons'] = _selectedAddons?.map((v) => v.toJson()).toList();
     }
     map['subtotal'] = _subtotal;
+    map['discountAmount'] = _discountAmount;
+    map['appliedDiscount'] = _appliedDiscount;
+    map['availableDiscounts'] = _availableDiscounts;
     map['totalTax'] = _totalTax;
     map['total'] = _total;
     if (_appliedTaxes != null) {

@@ -30,7 +30,7 @@ class UpdateOrder extends FoodCategoryEvent {
 
 class TableDine extends FoodCategoryEvent {}
 
-class ShopDetails extends FoodCategoryEvent {}
+class StockDetails extends FoodCategoryEvent {}
 
 class FoodCategoryBloc extends Bloc<FoodCategoryEvent, dynamic> {
   FoodCategoryBloc() : super(dynamic) {
@@ -84,8 +84,8 @@ class FoodCategoryBloc extends Bloc<FoodCategoryEvent, dynamic> {
         emit(error);
       });
     });
-    on<ShopDetails>((event, emit) async {
-      await ApiProvider().getShopDetailsAPI().then((value) {
+    on<StockDetails>((event, emit) async {
+      await ApiProvider().getStockDetailsAPI().then((value) {
         emit(value);
       }).catchError((error) {
         emit(error);

@@ -9,11 +9,13 @@ class GetProductByCatIdModel {
     bool? success,
     List<Rows>? rows,
     num? count,
+    bool? stockMaintenance,
     ErrorResponse? errorResponse,
   }) {
     _success = success;
     _rows = rows;
     _count = count;
+    _stockMaintenance = stockMaintenance;
   }
 
   GetProductByCatIdModel.fromJson(dynamic json) {
@@ -25,6 +27,7 @@ class GetProductByCatIdModel {
       });
     }
     _count = json['count'];
+    _stockMaintenance = json['stockMaintenance'];
     if (json['errors'] != null && json['errors'] is Map<String, dynamic>) {
       errorResponse = ErrorResponse.fromJson(json['errors']);
     } else {
@@ -34,20 +37,24 @@ class GetProductByCatIdModel {
   bool? _success;
   List<Rows>? _rows;
   num? _count;
+  bool? _stockMaintenance;
   ErrorResponse? errorResponse;
   GetProductByCatIdModel copyWith({
     bool? success,
     List<Rows>? rows,
     num? count,
+    bool? stockMaintenance,
   }) =>
       GetProductByCatIdModel(
         success: success ?? _success,
         rows: rows ?? _rows,
         count: count ?? _count,
+        stockMaintenance: stockMaintenance ?? _stockMaintenance,
       );
   bool? get success => _success;
   List<Rows>? get rows => _rows;
   num? get count => _count;
+  bool? get stockMaintenance => _stockMaintenance;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -56,6 +63,7 @@ class GetProductByCatIdModel {
       map['rows'] = _rows?.map((v) => v.toJson()).toList();
     }
     map['count'] = _count;
+    map['stockMaintenance'] = _stockMaintenance;
     if (errorResponse != null) {
       map['errors'] = errorResponse!.toJson();
     }
@@ -86,12 +94,18 @@ class Rows {
     num? basePrice,
     bool? hasAddons,
     bool? isAvailable,
+    bool? dailyStockClear,
+    bool? isDefault,
+    LocationId? locationId,
     String? createdBy,
     String? createdAt,
     String? updatedAt,
     num? v,
     String? image,
     List<Addons>? addons,
+    num? purchaseQuantity,
+    num? saleQuantity,
+    num? availableQuantity,
   }) {
     _id = id;
     _name = name;
@@ -99,12 +113,18 @@ class Rows {
     _basePrice = basePrice;
     _hasAddons = hasAddons;
     _isAvailable = isAvailable;
+    _dailyStockClear = dailyStockClear;
+    _isDefault = isDefault;
+    _locationId = locationId;
     _createdBy = createdBy;
     _createdAt = createdAt;
     _updatedAt = updatedAt;
     _v = v;
     _image = image;
     _addons = addons;
+    _purchaseQuantity = purchaseQuantity;
+    _saleQuantity = saleQuantity;
+    _availableQuantity = availableQuantity;
   }
 
   Rows.fromJson(dynamic json) : counter = 0 {
@@ -115,6 +135,11 @@ class Rows {
     _basePrice = json['basePrice'];
     _hasAddons = json['hasAddons'];
     _isAvailable = json['isAvailable'];
+    _dailyStockClear = json['dailyStockClear'];
+    _isDefault = json['isDefault'];
+    _locationId = json['locationId'] != null
+        ? LocationId.fromJson(json['locationId'])
+        : null;
     _createdBy = json['createdBy'];
     _createdAt = json['createdAt'];
     _updatedAt = json['updatedAt'];
@@ -126,6 +151,9 @@ class Rows {
         _addons?.add(Addons.fromJson(v));
       });
     }
+    _purchaseQuantity = json['purchaseQuantity'];
+    _saleQuantity = json['saleQuantity'];
+    _availableQuantity = json['availableQuantity'];
   }
   String? _id;
   String? _name;
@@ -133,12 +161,18 @@ class Rows {
   num? _basePrice;
   bool? _hasAddons;
   bool? _isAvailable;
+  bool? _dailyStockClear;
+  bool? _isDefault;
+  LocationId? _locationId;
   String? _createdBy;
   String? _createdAt;
   String? _updatedAt;
   num? _v;
   String? _image;
   List<Addons>? _addons;
+  num? _purchaseQuantity;
+  num? _saleQuantity;
+  num? _availableQuantity;
   Rows copyWith({
     String? id,
     String? name,
@@ -146,12 +180,18 @@ class Rows {
     num? basePrice,
     bool? hasAddons,
     bool? isAvailable,
+    bool? dailyStockClear,
+    bool? isDefault,
+    LocationId? locationId,
     String? createdBy,
     String? createdAt,
     String? updatedAt,
     num? v,
     String? image,
     List<Addons>? addons,
+    num? purchaseQuantity,
+    num? saleQuantity,
+    num? availableQuantity,
   }) =>
       Rows(
         id: id ?? _id,
@@ -160,12 +200,18 @@ class Rows {
         basePrice: basePrice ?? _basePrice,
         hasAddons: hasAddons ?? _hasAddons,
         isAvailable: isAvailable ?? _isAvailable,
+        dailyStockClear: dailyStockClear ?? _dailyStockClear,
+        isDefault: isDefault ?? _isDefault,
+        locationId: locationId ?? _locationId,
         createdBy: createdBy ?? _createdBy,
         createdAt: createdAt ?? _createdAt,
         updatedAt: updatedAt ?? _updatedAt,
         v: v ?? _v,
         image: image ?? _image,
         addons: addons ?? _addons,
+        purchaseQuantity: purchaseQuantity ?? _purchaseQuantity,
+        saleQuantity: saleQuantity ?? _saleQuantity,
+        availableQuantity: availableQuantity ?? _availableQuantity,
       );
   String? get id => _id;
   String? get name => _name;
@@ -173,12 +219,18 @@ class Rows {
   num? get basePrice => _basePrice;
   bool? get hasAddons => _hasAddons;
   bool? get isAvailable => _isAvailable;
+  bool? get dailyStockClear => _dailyStockClear;
+  bool? get isDefault => _isDefault;
+  LocationId? get locationId => _locationId;
   String? get createdBy => _createdBy;
   String? get createdAt => _createdAt;
   String? get updatedAt => _updatedAt;
   num? get v => _v;
   String? get image => _image;
   List<Addons>? get addons => _addons;
+  num? get purchaseQuantity => _purchaseQuantity;
+  num? get saleQuantity => _saleQuantity;
+  num? get availableQuantity => _availableQuantity;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -191,6 +243,11 @@ class Rows {
     map['basePrice'] = _basePrice;
     map['hasAddons'] = _hasAddons;
     map['isAvailable'] = _isAvailable;
+    map['dailyStockClear'] = _dailyStockClear;
+    map['isDefault'] = _isDefault;
+    if (_locationId != null) {
+      map['locationId'] = _locationId?.toJson();
+    }
     map['createdBy'] = _createdBy;
     map['createdAt'] = _createdAt;
     map['updatedAt'] = _updatedAt;
@@ -199,6 +256,9 @@ class Rows {
     if (_addons != null) {
       map['addons'] = _addons?.map((v) => v.toJson()).toList();
     }
+    map['purchaseQuantity'] = _purchaseQuantity;
+    map['saleQuantity'] = _saleQuantity;
+    map['availableQuantity'] = _availableQuantity;
     return map;
   }
 }
@@ -356,6 +416,40 @@ class Category {
     map['name'] = _name;
     map['isAvailable'] = _isAvailable;
     map['image'] = _image;
+    return map;
+  }
+}
+
+class LocationId {
+  LocationId({
+    String? id,
+    String? name,
+  }) {
+    _id = id;
+    _name = name;
+  }
+
+  LocationId.fromJson(dynamic json) {
+    _id = json['_id'];
+    _name = json['name'];
+  }
+  String? _id;
+  String? _name;
+  LocationId copyWith({
+    String? id,
+    String? name,
+  }) =>
+      LocationId(
+        id: id ?? _id,
+        name: name ?? _name,
+      );
+  String? get id => _id;
+  String? get name => _name;
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    map['_id'] = _id;
+    map['name'] = _name;
     return map;
   }
 }
