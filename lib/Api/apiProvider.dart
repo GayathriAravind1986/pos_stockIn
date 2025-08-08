@@ -17,6 +17,7 @@ import 'package:simple/ModelClass/ShopDetails/getStockMaintanencesModel.dart';
 import 'package:simple/ModelClass/StockIn/getLocationModel.dart';
 import 'package:simple/ModelClass/StockIn/getSupplierLocationModel.dart';
 import 'package:simple/ModelClass/StockIn/get_add_product_model.dart';
+import 'package:simple/ModelClass/StockIn/saveStockInModel.dart';
 import 'package:simple/Reusable/constant.dart';
 
 import '../ModelClass/Table/Get_table_model.dart';
@@ -690,6 +691,54 @@ class ApiProvider {
     } catch (error) {
       final errorResponse = handleError(error);
       return GetAddProductModel()..errorResponse = errorResponse;
+    }
+  }
+
+  /// Save StockIn - Post API Integration
+
+  Future<SaveStockInModel> postSaveStockInAPI(
+      final String stockInPayloadJson) async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    var token = sharedPreferences.getString("token");
+    debugPrint("payload:$stockInPayloadJson");
+    try {
+      var data = stockInPayloadJson;
+      debugPrint("data:$data");
+      var dio = Dio();
+      var response = await dio.request(
+        '${Constants.baseUrl}api/stock',
+        options: Options(
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+        data: data,
+      );
+      if (response.statusCode == 201 && response.data != null) {
+        try {
+          SaveStockInModel postGenerateOrderResponse =
+              SaveStockInModel.fromJson(response.data);
+          return postGenerateOrderResponse;
+        } catch (e) {
+          return SaveStockInModel()
+            ..errorResponse = ErrorResponse(
+              message: "Failed to parse response: $e",
+            );
+        }
+      } else {
+        return SaveStockInModel()
+          ..errorResponse = ErrorResponse(
+            message: "Error: ${response.data['message'] ?? 'Unknown error'}",
+            statusCode: response.statusCode,
+          );
+      }
+    } on DioException catch (dioError) {
+      final errorResponse = handleError(dioError);
+      return SaveStockInModel()..errorResponse = errorResponse;
+    } catch (error) {
+      return SaveStockInModel()..errorResponse = handleError(error);
     }
   }
 

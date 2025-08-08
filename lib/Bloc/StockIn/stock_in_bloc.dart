@@ -15,6 +15,11 @@ class StockInAddProduct extends StockInEvent {
   StockInAddProduct(this.locationId);
 }
 
+class SaveStockIn extends StockInEvent {
+  final String orderPayloadJson;
+  SaveStockIn(this.orderPayloadJson);
+}
+
 class StockInBloc extends Bloc<StockInEvent, dynamic> {
   StockInBloc() : super(dynamic) {
     on<StockInLocation>((event, emit) async {
@@ -33,6 +38,15 @@ class StockInBloc extends Bloc<StockInEvent, dynamic> {
     });
     on<StockInAddProduct>((event, emit) async {
       await ApiProvider().getAddProductAPI(event.locationId).then((value) {
+        emit(value);
+      }).catchError((error) {
+        emit(error);
+      });
+    });
+    on<SaveStockIn>((event, emit) async {
+      await ApiProvider()
+          .postSaveStockInAPI(event.orderPayloadJson)
+          .then((value) {
         emit(value);
       }).catchError((error) {
         emit(error);

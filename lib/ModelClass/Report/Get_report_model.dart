@@ -1,10 +1,19 @@
 import 'package:simple/Bloc/Response/errorResponse.dart';
 
 /// success : true
-/// data : [{"productId":"687b4158172650bdd200114a","productName":"உணவுகள்","unitPrice":8.47,"totalQty":11,"totalTax":0,"totalAmount":94.72},{"productId":"685703321544bf146f676966","productName":"Dhokla","unitPrice":38.14,"totalQty":13,"totalTax":0,"totalAmount":502.65},{"productId":"685701761544bf146f676943","productName":"Gulab Jamun","unitPrice":50.85,"totalQty":4,"totalTax":0,"totalAmount":212.54999999999998},{"productId":"6856fb6c1544bf146f676811","productName":"Hot Dogs","unitPrice":93.22,"totalQty":3,"totalTax":0,"totalAmount":279.65999999999997},{"productId":"6856fe811544bf146f6768b7","productName":"Pani Puri","unitPrice":50.85,"totalQty":7,"totalTax":0,"totalAmount":355.94},{"productId":"685703131544bf146f67695f","productName":"Samosa","unitPrice":25.42,"totalQty":3,"totalTax":0,"totalAmount":80.84},{"productId":"6857013e1544bf146f67693c","productName":"Brownies","unitPrice":38.14,"totalQty":2,"totalTax":0,"totalAmount":76.28},{"productId":"685703601544bf146f67696d","productName":"Pakora","unitPrice":42.37,"totalQty":2,"totalTax":0,"totalAmount":84.74},{"productId":"6856ff2d1544bf146f6768fc","productName":"Pav Bhaji","unitPrice":67.8,"totalQty":1,"totalTax":0,"totalAmount":67.8},{"productId":"6856fc581544bf146f67683f","productName":"மலேசியன் ஆட்டுக்கறி சுக்கா","unitPrice":76.27,"totalQty":6,"totalTax":0,"totalAmount":457.61999999999995}]
-/// totalRecords : 16
+/// data : [{"productId":{"sortOrder":0,"_id":"68905ba7f7a56be2b7655196","name":"Egg Briyani","category":"68905b61f7a56be2b7655158","basePrice":150,"hasAddons":true,"image":"https://res.cloudinary.com/dm6wrm7vf/image/upload/v1754291110/products/zv3ewtdoefyqlmvplqi6.webp","dailyStockClear":false,"isDefault":true,"locationId":"68903a7bf7a56be2b7654f2f","createdBy":"6890315266eb7a8181a3b4b4","createdAt":"2025-08-04T07:05:11.576Z","updatedAt":"2025-08-07T07:00:19.189Z","__v":0},"productName":"Egg Briyani","unitPrice":150,"totalQty":2,"totalTax":0,"totalAmount":300}]
+/// totalRecords : 1
 /// offset : 0
-/// limit : 10
+/// limit : 200
+/// finalAmount : 300
+/// finalQty : 2
+/// UserName : "Counter1"
+/// businessName : "Alagu Drive In"
+/// address : "Tenkasi main road, Alangualam, Tamil Nadu 627851"
+/// phone : "+91 0000000000"
+/// gstNumber : "00000000000"
+/// currencySymbol : "₹"
+/// printType : "imin"
 
 class GetReportModel {
   GetReportModel({
@@ -153,16 +162,16 @@ class GetReportModel {
   }
 }
 
-/// productId : "687b4158172650bdd200114a"
-/// productName : "உணவுகள்"
-/// unitPrice : 8.47
-/// totalQty : 11
+/// productId : {"sortOrder":0,"_id":"68905ba7f7a56be2b7655196","name":"Egg Briyani","category":"68905b61f7a56be2b7655158","basePrice":150,"hasAddons":true,"image":"https://res.cloudinary.com/dm6wrm7vf/image/upload/v1754291110/products/zv3ewtdoefyqlmvplqi6.webp","dailyStockClear":false,"isDefault":true,"locationId":"68903a7bf7a56be2b7654f2f","createdBy":"6890315266eb7a8181a3b4b4","createdAt":"2025-08-04T07:05:11.576Z","updatedAt":"2025-08-07T07:00:19.189Z","__v":0}
+/// productName : "Egg Briyani"
+/// unitPrice : 150
+/// totalQty : 2
 /// totalTax : 0
-/// totalAmount : 94.72
+/// totalAmount : 300
 
 class Data {
   Data({
-    String? productId,
+    ProductId? productId,
     String? productName,
     num? unitPrice,
     num? totalQty,
@@ -178,21 +187,23 @@ class Data {
   }
 
   Data.fromJson(dynamic json) {
-    _productId = json['productId'];
+    _productId = json['productId'] != null
+        ? ProductId.fromJson(json['productId'])
+        : null;
     _productName = json['productName'];
     _unitPrice = json['unitPrice'];
     _totalQty = json['totalQty'];
     _totalTax = json['totalTax'];
     _totalAmount = json['totalAmount'];
   }
-  String? _productId;
+  ProductId? _productId;
   String? _productName;
   num? _unitPrice;
   num? _totalQty;
   num? _totalTax;
   num? _totalAmount;
   Data copyWith({
-    String? productId,
+    ProductId? productId,
     String? productName,
     num? unitPrice,
     num? totalQty,
@@ -207,7 +218,7 @@ class Data {
         totalTax: totalTax ?? _totalTax,
         totalAmount: totalAmount ?? _totalAmount,
       );
-  String? get productId => _productId;
+  ProductId? get productId => _productId;
   String? get productName => _productName;
   num? get unitPrice => _unitPrice;
   num? get totalQty => _totalQty;
@@ -216,12 +227,159 @@ class Data {
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
-    map['productId'] = _productId;
+    if (_productId != null) {
+      map['productId'] = _productId?.toJson();
+    }
     map['productName'] = _productName;
     map['unitPrice'] = _unitPrice;
     map['totalQty'] = _totalQty;
     map['totalTax'] = _totalTax;
     map['totalAmount'] = _totalAmount;
+    return map;
+  }
+}
+
+/// sortOrder : 0
+/// _id : "68905ba7f7a56be2b7655196"
+/// name : "Egg Briyani"
+/// category : "68905b61f7a56be2b7655158"
+/// basePrice : 150
+/// hasAddons : true
+/// image : "https://res.cloudinary.com/dm6wrm7vf/image/upload/v1754291110/products/zv3ewtdoefyqlmvplqi6.webp"
+/// dailyStockClear : false
+/// isDefault : true
+/// locationId : "68903a7bf7a56be2b7654f2f"
+/// createdBy : "6890315266eb7a8181a3b4b4"
+/// createdAt : "2025-08-04T07:05:11.576Z"
+/// updatedAt : "2025-08-07T07:00:19.189Z"
+/// __v : 0
+
+class ProductId {
+  ProductId({
+    num? sortOrder,
+    String? id,
+    String? name,
+    String? category,
+    num? basePrice,
+    bool? hasAddons,
+    String? image,
+    bool? dailyStockClear,
+    bool? isDefault,
+    String? locationId,
+    String? createdBy,
+    String? createdAt,
+    String? updatedAt,
+    num? v,
+  }) {
+    _sortOrder = sortOrder;
+    _id = id;
+    _name = name;
+    _category = category;
+    _basePrice = basePrice;
+    _hasAddons = hasAddons;
+    _image = image;
+    _dailyStockClear = dailyStockClear;
+    _isDefault = isDefault;
+    _locationId = locationId;
+    _createdBy = createdBy;
+    _createdAt = createdAt;
+    _updatedAt = updatedAt;
+    _v = v;
+  }
+
+  ProductId.fromJson(dynamic json) {
+    _sortOrder = json['sortOrder'];
+    _id = json['_id'];
+    _name = json['name'];
+    _category = json['category'];
+    _basePrice = json['basePrice'];
+    _hasAddons = json['hasAddons'];
+    _image = json['image'];
+    _dailyStockClear = json['dailyStockClear'];
+    _isDefault = json['isDefault'];
+    _locationId = json['locationId'];
+    _createdBy = json['createdBy'];
+    _createdAt = json['createdAt'];
+    _updatedAt = json['updatedAt'];
+    _v = json['__v'];
+  }
+  num? _sortOrder;
+  String? _id;
+  String? _name;
+  String? _category;
+  num? _basePrice;
+  bool? _hasAddons;
+  String? _image;
+  bool? _dailyStockClear;
+  bool? _isDefault;
+  String? _locationId;
+  String? _createdBy;
+  String? _createdAt;
+  String? _updatedAt;
+  num? _v;
+  ProductId copyWith({
+    num? sortOrder,
+    String? id,
+    String? name,
+    String? category,
+    num? basePrice,
+    bool? hasAddons,
+    String? image,
+    bool? dailyStockClear,
+    bool? isDefault,
+    String? locationId,
+    String? createdBy,
+    String? createdAt,
+    String? updatedAt,
+    num? v,
+  }) =>
+      ProductId(
+        sortOrder: sortOrder ?? _sortOrder,
+        id: id ?? _id,
+        name: name ?? _name,
+        category: category ?? _category,
+        basePrice: basePrice ?? _basePrice,
+        hasAddons: hasAddons ?? _hasAddons,
+        image: image ?? _image,
+        dailyStockClear: dailyStockClear ?? _dailyStockClear,
+        isDefault: isDefault ?? _isDefault,
+        locationId: locationId ?? _locationId,
+        createdBy: createdBy ?? _createdBy,
+        createdAt: createdAt ?? _createdAt,
+        updatedAt: updatedAt ?? _updatedAt,
+        v: v ?? _v,
+      );
+  num? get sortOrder => _sortOrder;
+  String? get id => _id;
+  String? get name => _name;
+  String? get category => _category;
+  num? get basePrice => _basePrice;
+  bool? get hasAddons => _hasAddons;
+  String? get image => _image;
+  bool? get dailyStockClear => _dailyStockClear;
+  bool? get isDefault => _isDefault;
+  String? get locationId => _locationId;
+  String? get createdBy => _createdBy;
+  String? get createdAt => _createdAt;
+  String? get updatedAt => _updatedAt;
+  num? get v => _v;
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    map['sortOrder'] = _sortOrder;
+    map['_id'] = _id;
+    map['name'] = _name;
+    map['category'] = _category;
+    map['basePrice'] = _basePrice;
+    map['hasAddons'] = _hasAddons;
+    map['image'] = _image;
+    map['dailyStockClear'] = _dailyStockClear;
+    map['isDefault'] = _isDefault;
+    map['locationId'] = _locationId;
+    map['createdBy'] = _createdBy;
+    map['createdAt'] = _createdAt;
+    map['updatedAt'] = _updatedAt;
+    map['__v'] = _v;
     return map;
   }
 }

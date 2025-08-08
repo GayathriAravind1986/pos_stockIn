@@ -1,7 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,9 +11,11 @@ import 'package:simple/ModelClass/StockIn/getLocationModel.dart';
 import 'package:simple/ModelClass/StockIn/getSupplierLocationModel.dart';
 import 'package:simple/ModelClass/StockIn/get_add_product_model.dart'
     as productModel;
+import 'package:simple/ModelClass/StockIn/saveStockInModel.dart';
 import 'package:simple/Reusable/color.dart';
 import 'package:simple/Reusable/space.dart';
 import 'package:simple/UI/Authentication/login_screen.dart';
+import 'package:simple/UI/StockIn/Helper/stockIn_helper.dart';
 import 'package:simple/UI/StockIn/widget/productModel.dart';
 
 class StockView extends StatelessWidget {
@@ -51,8 +53,13 @@ class StockViewViewState extends State<StockViewView> {
       GetSupplierLocationModel();
   productModel.GetAddProductModel getAddProductModel =
       productModel.GetAddProductModel();
+  SaveStockInModel saveStockInModel = SaveStockInModel();
+
+  Key productDropdownKey = UniqueKey();
+
   String? errorMessage;
   bool stockLoad = false;
+  bool saveLoad = false;
   DateTime selectedDate = DateTime.now();
   String? selectedLocation;
   String? selectedSupplier;
@@ -68,16 +75,7 @@ class StockViewViewState extends State<StockViewView> {
       TextEditingController(text: '0.00');
   final TextEditingController finalController =
       TextEditingController(text: '0.00');
-  final List<String> locations = ['Chennai', 'Bangalore', 'Mumbai', 'Delhi'];
-
-  final List<String> product = [
-    'Chicken Biriyani',
-    'Mutton Biriyani',
-    'Veg Salad',
-    'Egg Biriyani',
-    'Fish Biriyani',
-    'Chicken meals'
-  ];
+  productModel.Data? selectedProductObj;
   List<ProductRowModel> selectedProducts = [];
   bool _isProductAlreadyAdded(String productId) {
     return selectedProducts.any((product) => product.id == productId);
@@ -142,6 +140,110 @@ class StockViewViewState extends State<StockViewView> {
     finalController.text = grandTotal.toStringAsFixed(2);
   }
 
+  void clearStockInForm() {
+    setState(() {
+      selectedSupplier = null;
+      selectedTax = null;
+      selectedProducts.clear();
+      selectedProduct = null;
+      selectedProductObj = null;
+      subtotalController.text = '0.00';
+      taxController.text = '0.00';
+      totalController.text = '0.00';
+      finalController.text = '0.00';
+      productDropdownKey = UniqueKey();
+    });
+  }
+/* validation */
+
+  bool showSupplierError = false;
+  bool showTaxTypeError = false;
+  bool showProductError = false;
+  String? supplierErrorText;
+  String? taxTypeErrorText;
+  String? productErrorText;
+
+  bool validateForm() {
+    bool isValid = true;
+
+    setState(() {
+      // Reset all error states
+      showSupplierError = false;
+      showTaxTypeError = false;
+      showProductError = false;
+      supplierErrorText = null;
+      taxTypeErrorText = null;
+      productErrorText = null;
+    });
+
+    // Validate supplier
+    if (selectedSupplier == null || selectedSupplier!.isEmpty) {
+      setState(() {
+        showSupplierError = true;
+        supplierErrorText = 'Supplier is required';
+      });
+      isValid = false;
+    }
+
+    // Validate tax type
+    if (selectedTax == null || selectedTax!.isEmpty) {
+      setState(() {
+        showTaxTypeError = true;
+        taxTypeErrorText = 'Tax type is required';
+      });
+      isValid = false;
+    }
+
+    // Validate products
+    if (selectedProducts.isEmpty) {
+      setState(() {
+        showProductError = true;
+        productErrorText = 'At least one product is required';
+      });
+      isValid = false;
+    } else {
+      // Validate individual product fields
+      for (int i = 0; i < selectedProducts.length; i++) {
+        ProductRowModel product = selectedProducts[i];
+
+        if (product.qty <= 0) {
+          showValidationSnackBar(
+              'Product "${product.name}" quantity must be greater than 0');
+          isValid = false;
+          break;
+        }
+
+        if (product.amount <= 0) {
+          showValidationSnackBar(
+              'Product "${product.name}" amount must be greater than 0');
+          isValid = false;
+          break;
+        }
+      }
+    }
+
+    // Validate final amount
+    double finalAmount = double.tryParse(finalController.text) ?? 0.0;
+    if (finalAmount <= 0) {
+      showValidationSnackBar('Final amount must be greater than 0');
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  // Show validation message using SnackBar
+  void showValidationSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -193,6 +295,10 @@ class StockViewViewState extends State<StockViewView> {
     }
   }
 
+  String getDisplayValue(double value) {
+    return value == 0.0 ? '' : value.toStringAsFixed(2);
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -200,6 +306,7 @@ class StockViewViewState extends State<StockViewView> {
 
   @override
   Widget build(BuildContext context) {
+    var size = MediaQuery.of(context).size;
     Widget buildProductRow(int index, ProductRowModel productRow) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 8),
@@ -254,7 +361,7 @@ class StockViewViewState extends State<StockViewView> {
             Expanded(
               child: TextFormField(
                 key: ValueKey('amount_$index'),
-                initialValue: productRow.amount.toStringAsFixed(2),
+                initialValue: getDisplayValue(productRow.amount),
                 onChanged: (val) {
                   setState(() {
                     productRow.amount = double.tryParse(val) ?? 0.0;
@@ -279,7 +386,7 @@ class StockViewViewState extends State<StockViewView> {
             Expanded(
               child: TextFormField(
                 key: ValueKey('tax1_$index'),
-                initialValue: productRow.tax1.toStringAsFixed(2),
+                initialValue: getDisplayValue(productRow.tax1),
                 onChanged: (val) {
                   setState(() {
                     productRow.tax1 = double.tryParse(val) ?? 0.0;
@@ -304,7 +411,7 @@ class StockViewViewState extends State<StockViewView> {
             Expanded(
               child: TextFormField(
                 key: ValueKey('tax2_$index'),
-                initialValue: productRow.tax2.toStringAsFixed(2),
+                initialValue: getDisplayValue(productRow.tax2),
                 onChanged: (val) {
                   setState(() {
                     productRow.tax2 = double.tryParse(val) ?? 0.0;
@@ -394,6 +501,8 @@ class StockViewViewState extends State<StockViewView> {
                 setState(() {
                   selectedProducts.removeAt(index);
                   selectedProduct = null;
+                  selectedProductObj = null;
+                  productDropdownKey = UniqueKey();
                   calculateTotals();
                 });
               },
@@ -472,16 +581,23 @@ class StockViewViewState extends State<StockViewView> {
                       decoration: InputDecoration(
                         labelText: 'Supplier *',
                         labelStyle: TextStyle(
-                            color: selectedSupplier != null
-                                ? appPrimaryColor
-                                : greyColor),
+                            color: showSupplierError
+                                ? redColor
+                                : (selectedSupplier != null
+                                    ? appPrimaryColor
+                                    : greyColor)),
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(color: greyColor),
+                          borderSide: BorderSide(
+                              color: showSupplierError ? redColor : greyColor),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: appPrimaryColor, width: 2),
+                          borderSide: BorderSide(
+                              color: showSupplierError
+                                  ? redColor
+                                  : appPrimaryColor,
+                              width: 2),
                         ),
+                        errorText: showSupplierError ? supplierErrorText : null,
                       ),
                       value: selectedSupplier,
                       items: (getSupplierLocationModel.data ?? [])
@@ -494,7 +610,8 @@ class StockViewViewState extends State<StockViewView> {
                       onChanged: (value) {
                         setState(() {
                           selectedSupplier = value;
-                          debugPrint("suppliername:$selectedSupplier");
+                          showSupplierError = false;
+                          supplierErrorText = null;
                         });
                       },
                     ),
@@ -505,16 +622,22 @@ class StockViewViewState extends State<StockViewView> {
                       decoration: InputDecoration(
                         labelText: 'Tax Type *',
                         labelStyle: TextStyle(
-                            color: selectedTax != null
-                                ? appPrimaryColor
-                                : greyColor),
+                            color: showTaxTypeError
+                                ? redColor
+                                : (selectedTax != null
+                                    ? appPrimaryColor
+                                    : greyColor)),
                         border: OutlineInputBorder(
-                          borderSide: BorderSide(color: greyColor),
+                          borderSide: BorderSide(
+                              color: showTaxTypeError ? redColor : greyColor),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              BorderSide(color: appPrimaryColor, width: 2),
+                          borderSide: BorderSide(
+                              color:
+                                  showTaxTypeError ? redColor : appPrimaryColor,
+                              width: 2),
                         ),
+                        errorText: showTaxTypeError ? taxTypeErrorText : null,
                       ),
                       value: selectedTax,
                       items: taxType
@@ -526,7 +649,8 @@ class StockViewViewState extends State<StockViewView> {
                       onChanged: (value) {
                         setState(() {
                           selectedTax = value;
-                          debugPrint("selectedTax:$selectedTax");
+                          showTaxTypeError = false;
+                          taxTypeErrorText = null;
                           calculateTotals();
                         });
                       },
@@ -536,17 +660,25 @@ class StockViewViewState extends State<StockViewView> {
               ),
               verticalSpace(height: 10),
               DropdownButtonFormField<String>(
+                  key: productDropdownKey,
                   decoration: InputDecoration(
+                    hint: const Text("Add Product *"),
                     labelText: 'Add Product *',
                     labelStyle: TextStyle(
-                      color:
-                          selectedProduct != null ? appPrimaryColor : greyColor,
+                      color: showProductError
+                          ? redColor
+                          : (selectedProduct != null
+                              ? appPrimaryColor
+                              : greyColor),
                     ),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(color: greyColor),
+                      borderSide: BorderSide(
+                          color: showProductError ? redColor : greyColor),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: appPrimaryColor, width: 2),
+                      borderSide: BorderSide(
+                          color: showProductError ? redColor : appPrimaryColor,
+                          width: 2),
                     ),
                   ),
                   value: selectedProduct,
@@ -560,13 +692,13 @@ class StockViewViewState extends State<StockViewView> {
                       .toList(),
                   onChanged: (value) {
                     setState(() {
-                      productModel.Data? selectedProductObj;
                       try {
                         selectedProductObj = getAddProductModel.data
                             ?.firstWhere((product) => product.id == value);
                       } on StateError {
                         selectedProduct = null;
                         selectedProductObj = null;
+                        productDropdownKey = UniqueKey();
                       }
                       final dropdownItems = (getAddProductModel.data ?? [])
                           .where((pro) => !selectedProducts
@@ -578,22 +710,37 @@ class StockViewViewState extends State<StockViewView> {
                               .every((item) => item.id != selectedProduct)) {
                         selectedProduct = null;
                         selectedProductObj = null;
+                        productDropdownKey = UniqueKey();
                       }
                       if (value != null &&
                           selectedProductObj != null &&
                           !_isProductAlreadyAdded(value)) {
                         selectedProducts.add(ProductRowModel(
-                          id: selectedProductObj.id ?? '',
-                          name: selectedProductObj.name ?? 'No Name',
+                          id: selectedProductObj?.id ?? '',
+                          name: selectedProductObj?.name ?? 'No Name',
                         ));
                         selectedProduct = null;
                         selectedProductObj = null;
+                        productDropdownKey = UniqueKey();
+                        showProductError = false;
+                        productErrorText = null;
                       } else {
                         selectedProduct = value;
                       }
                       calculateTotals();
                     });
                   }),
+              if (showProductError && productErrorText != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, left: 12.0),
+                  child: Text(
+                    productErrorText!,
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
               SizedBox(height: 16),
               if (selectedProducts.isNotEmpty)
                 Column(
@@ -687,6 +834,65 @@ class StockViewViewState extends State<StockViewView> {
                   ),
                 ],
               ),
+              verticalSpace(height: size.height * 0.1),
+              saveLoad
+                  ? SpinKitCircle(color: appPrimaryColor, size: 30)
+                  : Center(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          if (!validateForm()) {
+                            return; // Stop if validation fails
+                          }
+
+                          debugPrint("Validation passed, saving...");
+                          setState(() {
+                            saveLoad = true;
+                          });
+
+                          try {
+                            final payload = buildStockInPayload(
+                              date: selectedDate,
+                              supplierId: selectedSupplier ?? '',
+                              taxType: selectedTax ?? '',
+                              locationId: getLocationModel.data?.id ?? '',
+                              products: selectedProducts,
+                              finalAmount:
+                                  double.tryParse(finalController.text) ?? 0.0,
+                              subtotal:
+                                  double.tryParse(subtotalController.text) ??
+                                      0.0,
+                              taxAmount:
+                                  double.tryParse(taxController.text) ?? 0.0,
+                              totalAmount:
+                                  double.tryParse(totalController.text) ?? 0.0,
+                            );
+
+                            debugPrint(
+                                "📦 Sending StockIn payload: ${jsonEncode(payload)}");
+                            context
+                                .read<StockInBloc>()
+                                .add(SaveStockIn(jsonEncode(payload)));
+                          } catch (e) {
+                            setState(() {
+                              saveLoad = false;
+                            });
+                            showValidationSnackBar(
+                                'An error occurred while saving: $e');
+                          }
+                        },
+                        label: const Text("Save"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: greenColor,
+                          foregroundColor: whiteColor,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 40, vertical: 20),
+                          minimumSize: Size(size.width * 0.25, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
             ],
           ),
         ),
@@ -755,6 +961,28 @@ class StockViewViewState extends State<StockViewView> {
               stockLoad = false;
             });
             showToast("No Product for this location", context, color: false);
+          }
+          return true;
+        }
+        if (current is SaveStockInModel) {
+          saveStockInModel = current;
+          if (saveStockInModel.errorResponse?.isUnauthorized == true) {
+            _handle401Error();
+            return true;
+          }
+          if (saveStockInModel.success == true) {
+            debugPrint("Stock Save Successfully");
+            showToast("Stock Save Successfully", context, color: true);
+            Future.delayed(Duration(milliseconds: 100), () {
+              clearStockInForm();
+            });
+            setState(() {
+              saveLoad = false;
+            });
+          } else {
+            setState(() {
+              saveLoad = false;
+            });
           }
           return true;
         }

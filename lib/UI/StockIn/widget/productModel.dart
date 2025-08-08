@@ -27,20 +27,23 @@ class ProductRowModel {
     this.tax2Amount = 0.0,
     this.total = 0.0,
   }) {
-    // Initialize controllers
-    tax1AmountController =
-        TextEditingController(text: tax1Amount.toStringAsFixed(2));
-    tax2AmountController =
-        TextEditingController(text: tax2Amount.toStringAsFixed(2));
-    totalController = TextEditingController(text: total.toStringAsFixed(2));
-  }
-  void updateCalculatedValues() {
-    tax1AmountController.text = tax1Amount.toStringAsFixed(2);
-    tax2AmountController.text = tax2Amount.toStringAsFixed(2);
-    totalController.text = total.toStringAsFixed(2);
+    // Initialize controllers with empty string if value is 0.0
+    tax1AmountController = TextEditingController(
+        text: tax1Amount == 0.0 ? '' : tax1Amount.toStringAsFixed(2));
+    tax2AmountController = TextEditingController(
+        text: tax2Amount == 0.0 ? '' : tax2Amount.toStringAsFixed(2));
+    totalController = TextEditingController(
+        text: total == 0.0 ? '' : total.toStringAsFixed(2));
   }
 
-  // Don't forget to dispose controllers
+  void updateCalculatedValues() {
+    tax1AmountController.text =
+        tax1Amount == 0.0 ? '' : tax1Amount.toStringAsFixed(2);
+    tax2AmountController.text =
+        tax2Amount == 0.0 ? '' : tax2Amount.toStringAsFixed(2);
+    totalController.text = total == 0.0 ? '' : total.toStringAsFixed(2);
+  }
+
   void dispose() {
     tax1AmountController.dispose();
     tax2AmountController.dispose();
