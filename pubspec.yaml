@@ -46,7 +46,6 @@ dependencies:
   qr_flutter: ^4.0.0
   another_imin_printer: ^0.6.0
   device_info_plus:
-  collection: ^1.17.1
 
 dev_dependencies:
   flutter_test:

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:simple/Reusable/color.dart';
 
-
 /// ThemeCubit Class
 class ThemeCubit extends Cubit<ThemeData> {
   ThemeCubit() : super(_lightTheme);
