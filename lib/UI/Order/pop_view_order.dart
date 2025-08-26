@@ -50,8 +50,10 @@ class _ThermalReceiptDialogState extends State<ThermalReceiptDialog> {
             })
         .toList();
 
-    String businessName = invoice.businessName ?? 'Business Name';
-    String address = invoice.address ?? 'Business Address';
+    String businessName = invoice.businessName ?? '';
+    String address = invoice.address ?? '';
+    String gst = invoice.gstNumber ?? '';
+    debugPrint("gst:$gst");
     double taxAmount = (order.tax ?? 0.0).toDouble();
     String orderNumber = order.orderNumber ?? 'N/A';
     String paymentMethod = invoice.paidBy ?? '';
@@ -115,10 +117,11 @@ class _ThermalReceiptDialogState extends State<ThermalReceiptDialog> {
                       child: getThermalReceiptWidget(
                         businessName: businessName,
                         address: address,
+                        gst: gst,
                         items: items,
                         tax: taxAmount,
                         paidBy: paymentMethod,
-                        tamilTagline: 'ஒரே ஒரு முறை சுவைத்து பாருங்கள்',
+                        tamilTagline: '',
                         phone: phone,
                         subtotal: subTotal,
                         total: total,
@@ -147,8 +150,8 @@ class _ThermalReceiptDialogState extends State<ThermalReceiptDialog> {
                               if (imageBytes != null) {
                                 await printerService.init();
                                 await printerService.printBitmap(imageBytes);
-                                await Future.delayed(
-                                    const Duration(seconds: 3));
+                                // await Future.delayed(
+                                //     const Duration(seconds: 2));
                                 await printerService.fullCut();
                                 Navigator.pop(context);
                               }

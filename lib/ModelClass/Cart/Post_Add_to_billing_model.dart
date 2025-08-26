@@ -161,6 +161,8 @@ class Items {
     num? availableDiscounts,
     num? totalTax,
     num? total,
+    bool? stockMaintenance,
+    bool? isStock,
     List<AppliedTaxes>? appliedTaxes,
   }) {
     _id = id;
@@ -178,6 +180,8 @@ class Items {
     _totalTax = totalTax;
     _total = total;
     _appliedTaxes = appliedTaxes;
+    _stockMaintenance = stockMaintenance;
+    _isStock = isStock;
   }
 
   Items.fromJson(dynamic json) {
@@ -206,6 +210,8 @@ class Items {
         _appliedTaxes?.add(AppliedTaxes.fromJson(v));
       });
     }
+    _stockMaintenance = json['stockMaintenance'];
+    _isStock = json['isStock'];
   }
   String? _id;
   String? _name;
@@ -221,6 +227,8 @@ class Items {
   num? _availableDiscounts;
   num? _totalTax;
   num? _total;
+  bool? _stockMaintenance;
+  bool? _isStock;
   List<AppliedTaxes>? _appliedTaxes;
   Items copyWith({
     String? id,
@@ -237,6 +245,8 @@ class Items {
     num? availableDiscounts,
     num? totalTax,
     num? total,
+    bool? stockMaintenance,
+    bool? isStock,
     List<AppliedTaxes>? appliedTaxes,
   }) =>
       Items(
@@ -254,6 +264,8 @@ class Items {
         availableDiscounts: availableDiscounts ?? _availableDiscounts,
         totalTax: totalTax ?? _totalTax,
         total: total ?? _total,
+        stockMaintenance: stockMaintenance ?? _stockMaintenance,
+        isStock: isStock ?? _isStock,
         appliedTaxes: appliedTaxes ?? _appliedTaxes,
       );
   String? get id => _id;
@@ -270,6 +282,8 @@ class Items {
   num? get availableDiscounts => _availableDiscounts;
   num? get totalTax => _totalTax;
   num? get total => _total;
+  bool? get stockMaintenance => _stockMaintenance;
+  bool? get isStock => _isStock;
   List<AppliedTaxes>? get appliedTaxes => _appliedTaxes;
 
   Map<String, dynamic> toJson() {
@@ -290,6 +304,8 @@ class Items {
     map['availableDiscounts'] = _availableDiscounts;
     map['totalTax'] = _totalTax;
     map['total'] = _total;
+    map['stockMaintenance'] = _stockMaintenance;
+    map['isStock'] = _isStock;
     if (_appliedTaxes != null) {
       map['appliedTaxes'] = _appliedTaxes?.map((v) => v.toJson()).toList();
     }

@@ -106,6 +106,7 @@ class Rows {
     num? purchaseQuantity,
     num? saleQuantity,
     num? availableQuantity,
+    bool? isStock,
   }) {
     _id = id;
     _name = name;
@@ -125,6 +126,7 @@ class Rows {
     _purchaseQuantity = purchaseQuantity;
     _saleQuantity = saleQuantity;
     _availableQuantity = availableQuantity;
+    _isStock = isStock;
   }
 
   Rows.fromJson(dynamic json) : counter = 0 {
@@ -154,6 +156,7 @@ class Rows {
     _purchaseQuantity = json['purchaseQuantity'];
     _saleQuantity = json['saleQuantity'];
     _availableQuantity = json['availableQuantity'];
+    _isStock = json['isStock'];
   }
   String? _id;
   String? _name;
@@ -173,6 +176,7 @@ class Rows {
   num? _purchaseQuantity;
   num? _saleQuantity;
   num? _availableQuantity;
+  bool? _isStock;
   Rows copyWith({
     String? id,
     String? name,
@@ -192,6 +196,7 @@ class Rows {
     num? purchaseQuantity,
     num? saleQuantity,
     num? availableQuantity,
+    bool? isStock,
   }) =>
       Rows(
         id: id ?? _id,
@@ -212,6 +217,7 @@ class Rows {
         purchaseQuantity: purchaseQuantity ?? _purchaseQuantity,
         saleQuantity: saleQuantity ?? _saleQuantity,
         availableQuantity: availableQuantity ?? _availableQuantity,
+        isStock: isStock ?? _isStock,
       );
   String? get id => _id;
   String? get name => _name;
@@ -231,6 +237,7 @@ class Rows {
   num? get purchaseQuantity => _purchaseQuantity;
   num? get saleQuantity => _saleQuantity;
   num? get availableQuantity => _availableQuantity;
+  bool? get isStock => _isStock;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -259,6 +266,7 @@ class Rows {
     map['purchaseQuantity'] = _purchaseQuantity;
     map['saleQuantity'] = _saleQuantity;
     map['availableQuantity'] = _availableQuantity;
+    map['isStock'] = _isStock;
     return map;
   }
 }

@@ -6,7 +6,9 @@ abstract class OrderTodayEvent {}
 class OrderTodayList extends OrderTodayEvent {
   String fromDate;
   String toDate;
-  OrderTodayList(this.fromDate, this.toDate);
+  String tableId;
+  String waiterId;
+  OrderTodayList(this.fromDate, this.toDate, this.tableId, this.waiterId);
 }
 
 class DeleteOrder extends OrderTodayEvent {
@@ -19,11 +21,16 @@ class ViewOrder extends OrderTodayEvent {
   ViewOrder(this.orderId);
 }
 
+class TableDine extends OrderTodayEvent {}
+
+class WaiterDine extends OrderTodayEvent {}
+
 class OrderTodayBloc extends Bloc<OrderTodayEvent, dynamic> {
   OrderTodayBloc() : super(dynamic) {
     on<OrderTodayList>((event, emit) async {
       await ApiProvider()
-          .getOrderTodayAPI(event.fromDate, event.toDate)
+          .getOrderTodayAPI(
+              event.fromDate, event.toDate, event.tableId, event.waiterId)
           .then((value) {
         emit(value);
       }).catchError((error) {
@@ -44,12 +51,19 @@ class OrderTodayBloc extends Bloc<OrderTodayEvent, dynamic> {
         emit(error);
       });
     });
-    // on<AddToBilling>((event, emit) async {
-    //   await ApiProvider().postAddToBillingAPI(event.billingItems).then((value) {
-    //     emit(value);
-    //   }).catchError((error) {
-    //     emit(error);
-    //   });
-    // });
+    on<TableDine>((event, emit) async {
+      await ApiProvider().getTableAPI().then((value) {
+        emit(value);
+      }).catchError((error) {
+        emit(error);
+      });
+    });
+    on<WaiterDine>((event, emit) async {
+      await ApiProvider().getWaiterAPI().then((value) {
+        emit(value);
+      }).catchError((error) {
+        emit(error);
+      });
+    });
   }
 }
